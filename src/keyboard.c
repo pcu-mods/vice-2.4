@@ -404,6 +404,7 @@ static void keyboard_restore_released(void)
     restore_raw = 0;
 }
 
+extern int swapping;
 void keyboard_key_pressed(signed long key)
 {
     int i, latch;
@@ -416,6 +417,15 @@ void keyboard_key_pressed(signed long key)
     if (((key == key_ctrl_restore1) || (key == key_ctrl_restore2))
         && machine_has_restore_key())
     {
+        // swap joystick ports
+	// I initially tried a technique borrowed from
+	// "ui_joystick2.c" - swap_joystick_ports(), but it didn't work.
+	// I suspect the retro-games branch does not use resource-names
+	// like 'JoyDevice*', so I tried this alternate method of
+	// swapping the joystick.
+        if (swapping == 0) swapping = 1;
+        else if (swapping == 1) swapping = 0;
+
         keyboard_restore_pressed();
         return;
     }
