@@ -444,6 +444,24 @@ static void keyboard_restore_released(void)
     restore_raw = 0;
 }
 
+void show_val(int val)
+{
+  int loc = 0x400;  // start of screen mem;
+  char str[256];
+  sprintf(str, "%d", val);
+  for (int k = 0; k < 40; k++)
+  {
+    if (k < strlen(str))
+    {
+      mem_ram[loc+k] = str[k];
+    }
+    else
+    {
+      mem_ram[loc+k] = 32; // insert spaces
+    }
+  }
+}
+
 void keyboard_key_pressed(signed long key)
 {
     int i, latch;
@@ -451,6 +469,9 @@ void keyboard_key_pressed(signed long key)
     if (event_playback_active()) {
         return;
     }
+
+    printf("key = %d\n", (int)key);
+    show_val((int)key);
 
     /* Restore */
     if (((key == key_ctrl_restore1) || (key == key_ctrl_restore2))
