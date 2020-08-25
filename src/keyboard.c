@@ -121,6 +121,7 @@ static int is_left_arrow(int row, int col, int value)
   return (row==7 && col==1 && value!=0);
 }
 
+extern BYTE mem_ram[];
 extern int swapping;
 static int swap_joyports(void)
 {
@@ -132,6 +133,7 @@ static int swap_joyports(void)
   // swapping the joystick.
   if (swapping == 0) swapping = 1;
   else if (swapping == 1) swapping = 0;
+  // mem_ram[0x400+40]++;
 }
 
 static int keyboard_set_latch_keyarr(int row, int col, int value)
@@ -154,6 +156,7 @@ static int keyboard_set_latch_keyarr(int row, int col, int value)
     {
       // do the joystick swap here
       printf("do joystick swap here!!\n");
+      swap_joyports();
     }
 
     return 0;
@@ -444,7 +447,6 @@ static void keyboard_restore_released(void)
     restore_raw = 0;
 }
 
-extern BYTE mem_ram[];
 void show_val(int val)
 {
   int k;
@@ -473,7 +475,7 @@ void keyboard_key_pressed(signed long key)
     }
 
     printf("key = %d\n", (int)key);
-    show_val((int)key);
+    // show_val((int)key);
 
     /* Restore */
     if (((key == key_ctrl_restore1) || (key == key_ctrl_restore2))
