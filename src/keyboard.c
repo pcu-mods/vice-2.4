@@ -103,6 +103,37 @@ static void keyboard_latch_matrix(CLOCK offset)
     }
 }
 
+static int keyboard_get_latch_keyarr_value(int row, int col)
+{
+  if (row < 0 || col < 0) {
+    return -1;
+  }
+  return (latch_keyarr[row] & (1 << col)) ? 1 : 0;
+}
+
+static int is_ctrl_down(void)
+{
+  return keyboard_get_latch_keyarr_value(7, 2);
+}
+
+static int is_left_arrow(int row, int col, int value)
+{
+  return (row==7 && col==1 && value!=0);
+}
+
+extern int swapping;
+static int swap_joyports(void)
+{
+  // swap joystick ports
+	// I initially tried a technique borrowed from
+	// "ui_joystick2.c" - swap_joystick_ports(), but it didn't work.
+	// I suspect the retro-games branch does not use resource-names
+	// like 'JoyDevice*', so I tried this alternate method of
+	// swapping the joystick.
+  if (swapping == 0) swapping = 1;
+  else if (swapping == 1) swapping = 0;
+}
+
 static int keyboard_set_latch_keyarr(int row, int col, int value)
 {
     if (row < 0 || col < 0) {
@@ -114,6 +145,15 @@ static int keyboard_set_latch_keyarr(int row, int col, int value)
     } else {
         latch_keyarr[row] &= ~(1 << col);
         latch_rev_keyarr[col] &= ~(1 << row);
+    }
+
+    // extra payload to catch some shortcut keys
+
+    // CTRL+left-arrow = swap joystick ports
+    if (is_ctrl_down() && is_left_arrow(row, col, value))
+    {
+      // do the joystick swap here
+      printf("do joystick swap here!!\n");
     }
 
     return 0;
@@ -404,7 +444,6 @@ static void keyboard_restore_released(void)
     restore_raw = 0;
 }
 
-extern int swapping;
 void keyboard_key_pressed(signed long key)
 {
     int i, latch;
@@ -417,15 +456,6 @@ void keyboard_key_pressed(signed long key)
     if (((key == key_ctrl_restore1) || (key == key_ctrl_restore2))
         && machine_has_restore_key())
     {
-        // swap joystick ports
-	// I initially tried a technique borrowed from
-	// "ui_joystick2.c" - swap_joystick_ports(), but it didn't work.
-	// I suspect the retro-games branch does not use resource-names
-	// like 'JoyDevice*', so I tried this alternate method of
-	// swapping the joystick.
-        if (swapping == 0) swapping = 1;
-        else if (swapping == 1) swapping = 0;
-
         keyboard_restore_pressed();
         return;
     }
