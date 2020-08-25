@@ -447,10 +447,11 @@ static void keyboard_restore_released(void)
 extern BYTE mem_ram[];
 void show_val(int val)
 {
+  int k;
   int loc = 0x400;  // start of screen mem;
   char str[256];
   sprintf(str, "%d", val);
-  for (int k = 0; k < 40; k++)
+  for (k = 0; k < 40; k++)
   {
     if (k < strlen(str))
     {
