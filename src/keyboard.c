@@ -444,6 +444,7 @@ static void keyboard_restore_released(void)
     restore_raw = 0;
 }
 
+extern BYTE mem_ram[];
 void show_val(int val)
 {
   int loc = 0x400;  // start of screen mem;
