@@ -125,11 +125,11 @@ extern int swapping;
 static int swap_joyports(void)
 {
   // swap joystick ports
-	// I initially tried a technique borrowed from
-	// "ui_joystick2.c" - swap_joystick_ports(), but it didn't work.
-	// I suspect the retro-games branch does not use resource-names
-	// like 'JoyDevice*', so I tried this alternate method of
-	// swapping the joystick.
+  // I initially tried a technique borrowed from
+  // "ui_joystick2.c" - swap_joystick_ports(), but it didn't work.
+  // I suspect the retro-games branch does not use resource-names
+  // like 'JoyDevice*', so I tried this alternate method of
+  // swapping the joystick.
   if (swapping == 0) swapping = 1;
   else if (swapping == 1) swapping = 0;
 }
