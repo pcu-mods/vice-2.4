@@ -121,6 +121,7 @@ static int is_left_arrow(int row, int col, int value)
   return (row==7 && col==1 && value!=0);
 }
 
+void debug_msg(int x, int y, char* str);
 extern BYTE mem_ram[];
 extern int swapping;
 static int swap_joyports(void)
@@ -131,6 +132,9 @@ static int swap_joyports(void)
   // I suspect the retro-games branch does not use resource-names
   // like 'JoyDevice*', so I tried this alternate method of
   // swapping the joystick.
+
+  debug_msg(10,10, "JOYSTICK SWAP");
+
   if (swapping == 0) swapping = 1;
   else if (swapping == 1) swapping = 0;
   // mem_ram[0x400+40]++;
