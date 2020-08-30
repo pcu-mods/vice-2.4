@@ -491,6 +491,7 @@ void video_canvas_refresh_all(video_canvas_t *canvas);
 
 void debug_msg(int x, int y, char* str)
 {
+
   int i;
   for (i = 0; i < strlen(str); i++)
   {
@@ -500,7 +501,7 @@ void debug_msg(int x, int y, char* str)
   draw_debug();
 
   // trigger pause
-  ui_pause_emulation(1);
+  //ui_pause_emulation(1);
 
   // raster_force_repaint()
   vicii.raster.dont_cache = 1;
@@ -513,7 +514,7 @@ void debug_msg(int x, int y, char* str)
   usleep(1000000);
 
   // un-pause
-  ui_pause_emulation(0);
+  //ui_pause_emulation(0);
 
   // force refresh
   video_canvas_refresh_all(vicii.raster.canvas);
