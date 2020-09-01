@@ -184,7 +184,7 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     // CTRL+H = hard-reset
     if (is_ctrl_down() && is_h(row, col, value))
     {
-      debug_msg(10,10, "SOFT RESET");
+      debug_msg(10,10, "HARD RESET");
       vsync_suspend_speed_eval();
       machine_trigger_reset(MACHINE_RESET_MODE_HARD);
     }
