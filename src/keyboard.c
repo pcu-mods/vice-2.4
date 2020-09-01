@@ -470,6 +470,18 @@ void show_val(int val)
   }
 }
 
+void show_str(char* str)
+{
+  int k;
+  int loc = 0x400;  // start of screen mem;
+  for (k = 0; k < strlen(str); k++)
+  {
+    if (k < strlen(str))
+    {
+      mem_ram[loc+k] = str[k];
+    }
+  }
+}
 void keyboard_key_pressed(signed long key)
 {
     int i, latch;

@@ -440,6 +440,8 @@ extern BYTE mem_chargen_rom[0x1000];
 
 BYTE debug_charmem[40*25] = { 0 };
 
+//void show_str(char* str);
+
 void draw_debug(void)
 {
   static int z = 0;
@@ -448,6 +450,7 @@ void draw_debug(void)
   BYTE fontval;
   BYTE* chr_ptr;
   BYTE c;
+  //char str[256];
 
   // TODO: Add my drawing logic here
   width = vicii.raster.geometry->screen_size.width
@@ -458,10 +461,8 @@ void draw_debug(void)
       + vicii.raster.geometry->gfx_position.y * width
       + vicii.raster.geometry->gfx_position.x + vicii.raster.geometry->extra_offscreen_border_left;
 
-  for (x = 0; x < 320; x++)
-  {
-      *(gfx_ptr + x) = 0x02;
-  }
+  //sprintf(str, "%02X %02X %02X %02X", *(gfx_ptr), *(gfx_ptr+1), *(gfx_ptr+2), *(gfx_ptr+3));
+  //show_str(str);
 
   for (y = 0; y < 25; y++)
   {
@@ -487,8 +488,6 @@ void draw_debug(void)
   }
 }
 
-void video_canvas_refresh_all(video_canvas_t *canvas);
-
 void debug_msg(int x, int y, char* str)
 {
 
@@ -500,24 +499,11 @@ void debug_msg(int x, int y, char* str)
 
   draw_debug();
 
-  // trigger pause
-  //ui_pause_emulation(1);
-
-  // raster_force_repaint()
-  vicii.raster.dont_cache = 1;
-  vicii.raster.num_cached_lines = 0;
-
   // force refresh
-  video_canvas_refresh_all(vicii.raster.canvas);
+  vsyncarch_presync(); // does a notify FRAME_DONE
 
   // wait 1 second
   usleep(1000000);
-
-  // un-pause
-  //ui_pause_emulation(0);
-
-  // force refresh
-  video_canvas_refresh_all(vicii.raster.canvas);
 }
 
 /* Reset the VIC-II chip.  */
