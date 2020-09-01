@@ -131,6 +131,11 @@ static int is_r(int row, int col, int value)
   return (row==2 && col==1 && value!=0);
 }
 
+static int is_h(int row, int col, int value)
+{
+  return (row==3 && col==5 && value!=0);
+}
+
 
 void debug_msg(int x, int y, char* str);
 extern BYTE mem_ram[];
@@ -174,6 +179,14 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
       debug_msg(10,10, "SOFT RESET");
       vsync_suspend_speed_eval();
       machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
+    }
+
+    // CTRL+H = hard-reset
+    if (is_ctrl_down() && is_h(row, col, value))
+    {
+      debug_msg(10,10, "SOFT RESET");
+      vsync_suspend_speed_eval();
+      machine_trigger_reset(MACHINE_RESET_MODE_HARD);
     }
 }
 
