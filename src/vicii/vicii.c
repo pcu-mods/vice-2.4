@@ -436,6 +436,76 @@ struct video_canvas_s *vicii_get_canvas(void)
     return vicii.raster.canvas;
 }
 
+extern BYTE mem_chargen_rom[0x1000];
+
+BYTE debug_charmem[40*25] = { 0 };
+
+//void show_str(char* str);
+
+void draw_debug(void)
+{
+  static int z = 0;
+  int x, y, chrx, chry, width;
+  BYTE *fontmem = mem_chargen_rom + 0x800;
+  BYTE fontval;
+  BYTE* chr_ptr;
+  BYTE c;
+  //char str[256];
+
+  // TODO: Add my drawing logic here
+  width = vicii.raster.geometry->screen_size.width
+            + vicii.raster.geometry->extra_offscreen_border_left
+            + vicii.raster.geometry->extra_offscreen_border_right;
+
+  BYTE* gfx_ptr = vicii.raster.canvas->draw_buffer->draw_buffer
+      + vicii.raster.geometry->gfx_position.y * width
+      + vicii.raster.geometry->gfx_position.x + vicii.raster.geometry->extra_offscreen_border_left;
+
+  //sprintf(str, "%02X %02X %02X %02X", *(gfx_ptr), *(gfx_ptr+1), *(gfx_ptr+2), *(gfx_ptr+3));
+  //show_str(str);
+
+  for (y = 0; y < 25; y++)
+  {
+    for (x = 0; x < 40; x++)
+    {
+      c = debug_charmem[x + 40*y];
+      if (c == 0)
+        continue;
+
+      chr_ptr = gfx_ptr + x*8 + (y*8)*width;
+
+      for (chry = 0; chry < 8; chry++)
+      {
+        fontval = fontmem[(c<<3) + chry];
+        //printf("fontval=%d\n", fontval);
+        for (chrx = 0; chrx < 8; chrx++)
+        {
+          *((BYTE*)chr_ptr + chrx) = (fontval & (1<<(7-chrx))) ? 0x00 : 0x01;
+        }
+        chr_ptr += width;
+      }
+    }
+  }
+}
+
+void debug_msg(int x, int y, char* str)
+{
+
+  int i;
+  for (i = 0; i < strlen(str); i++)
+  {
+    debug_charmem[x+y*40+i] = str[i];
+  }
+
+  draw_debug();
+
+  // force refresh
+  vsyncarch_presync(); // does a notify FRAME_DONE
+
+  // wait 1 second
+  usleep(1000000);
+}
+
 /* Reset the VIC-II chip.  */
 void vicii_reset(void)
 {

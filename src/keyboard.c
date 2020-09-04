@@ -103,6 +103,43 @@ static void keyboard_latch_matrix(CLOCK offset)
     }
 }
 
+static int keyboard_get_latch_keyarr_value(int row, int col)
+{
+  if (row < 0 || col < 0) {
+    return -1;
+  }
+  return (latch_keyarr[row] & (1 << col)) ? 1 : 0;
+}
+
+static int is_ctrl_down(void)
+{
+  return keyboard_get_latch_keyarr_value(7, 2);
+}
+
+static int is_left_arrow(int row, int col, int value)
+{
+  return (row==7 && col==1 && value!=0);
+}
+
+void debug_msg(int x, int y, char* str);
+extern BYTE mem_ram[];
+extern int swapping;
+static int swap_joyports(void)
+{
+  // swap joystick ports
+  // I initially tried a technique borrowed from
+  // "ui_joystick2.c" - swap_joystick_ports(), but it didn't work.
+  // I suspect the retro-games branch does not use resource-names
+  // like 'JoyDevice*', so I tried this alternate method of
+  // swapping the joystick.
+
+  debug_msg(10,10, "JOYSTICK SWAP");
+
+  if (swapping == 0) swapping = 1;
+  else if (swapping == 1) swapping = 0;
+  // mem_ram[0x400+40]++;
+}
+
 static int keyboard_set_latch_keyarr(int row, int col, int value)
 {
     if (row < 0 || col < 0) {
@@ -114,6 +151,16 @@ static int keyboard_set_latch_keyarr(int row, int col, int value)
     } else {
         latch_keyarr[row] &= ~(1 << col);
         latch_rev_keyarr[col] &= ~(1 << row);
+    }
+
+    // extra payload to catch some shortcut keys
+
+    // CTRL+left-arrow = swap joystick ports
+    if (is_ctrl_down() && is_left_arrow(row, col, value))
+    {
+      // do the joystick swap here
+      printf("do joystick swap here!!\n");
+      swap_joyports();
     }
 
     return 0;
@@ -404,6 +451,37 @@ static void keyboard_restore_released(void)
     restore_raw = 0;
 }
 
+void show_val(int val)
+{
+  int k;
+  int loc = 0x400;  // start of screen mem;
+  char str[256];
+  sprintf(str, "%d", val);
+  for (k = 0; k < 40; k++)
+  {
+    if (k < strlen(str))
+    {
+      mem_ram[loc+k] = str[k];
+    }
+    else
+    {
+      mem_ram[loc+k] = 32; // insert spaces
+    }
+  }
+}
+
+void show_str(char* str)
+{
+  int k;
+  int loc = 0x400;  // start of screen mem;
+  for (k = 0; k < strlen(str); k++)
+  {
+    if (k < strlen(str))
+    {
+      mem_ram[loc+k] = str[k];
+    }
+  }
+}
 void keyboard_key_pressed(signed long key)
 {
     int i, latch;
@@ -411,6 +489,9 @@ void keyboard_key_pressed(signed long key)
     if (event_playback_active()) {
         return;
     }
+
+    printf("key = %d\n", (int)key);
+    // show_val((int)key);
 
     /* Restore */
     if (((key == key_ctrl_restore1) || (key == key_ctrl_restore2))

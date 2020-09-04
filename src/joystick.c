@@ -121,6 +121,21 @@ static CLOCK joystick_delay;
 static int joykeys[KEYSET_NUM][KEYSET_NUM_KEYS];
 #endif
 
+int swapping = 0;
+
+int getjoyid(int joyport)
+{
+  if (swapping)
+  {
+    if (joyport == 1)
+      joyport = 2;
+    else if (joyport == 2)
+      joyport = 1;
+  }
+
+  return joyport;
+}
+
 /*! \todo SRT: offset is unused! */
 
 static void joystick_latch_matrix(CLOCK offset)
@@ -202,6 +217,7 @@ static void joystick_process_latch(void)
 
 void joystick_set_value_absolute(unsigned int joyport, BYTE value)
 {
+  joyport = getjoyid(joyport);
     if (event_playback_active()) {
         return;
     }
@@ -216,6 +232,7 @@ void joystick_set_value_absolute(unsigned int joyport, BYTE value)
 /* set joystick bits */
 void joystick_set_value_or(unsigned int joyport, BYTE value)
 {
+  joyport = getjoyid(joyport);
     if (event_playback_active()) {
         return;
     }
@@ -233,6 +250,7 @@ void joystick_set_value_or(unsigned int joyport, BYTE value)
 /* release joystick bits */
 void joystick_set_value_and(unsigned int joyport, BYTE value)
 {
+  joyport = getjoyid(joyport);
     if (event_playback_active()) {
         return;
     }
@@ -244,6 +262,7 @@ void joystick_set_value_and(unsigned int joyport, BYTE value)
 
 void joystick_clear(unsigned int joyport)
 {
+  joyport = getjoyid(joyport);
     latch_joystick_value[joyport] = 0;
     latch_joystick_value[0] = (BYTE)joyport;
     joystick_latch_matrix(0);
@@ -257,7 +276,7 @@ void joystick_clear_all(void)
 
 BYTE get_joystick_value(int index)
 {
-    return joystick_value[index];
+    return joystick_value[getjoyid(index)];
 }
 
 /*-----------------------------------------------------------------------*/
