@@ -121,6 +121,17 @@ static int is_left_arrow(int row, int col, int value)
   return (row==7 && col==1 && value!=0);
 }
 
+static int is_f(int row, int col, int value)
+{
+  return (row==2 && col==5 && value!=0);
+}
+
+static int is_r(int row, int col, int value)
+{
+  return (row==2 && col==1 && value!=0);
+}
+
+
 void debug_msg(int x, int y, char* str);
 extern BYTE mem_ram[];
 extern int swapping;
@@ -137,7 +148,33 @@ static int swap_joyports(void)
 
   if (swapping == 0) swapping = 1;
   else if (swapping == 1) swapping = 0;
-  // mem_ram[0x400+40]++;
+}
+
+void cartridge_trigger_freeze(void);
+void vsync_suspend_speed_eval(void);
+
+static void assess_pcu_shortcut_keys(int row, int col, int value)
+{
+    // CTRL+left-arrow = swap joystick ports
+    if (is_ctrl_down() && is_left_arrow(row, col, value))
+    {
+      swap_joyports();
+    }
+
+    // CTRL+F = freeze button
+    if (is_ctrl_down() && is_f(row, col, value))
+    {
+      debug_msg(10,10, "FREEZE BUTTON PRESSED");
+      cartridge_trigger_freeze();
+    }
+
+    // CTRL+R = soft-reset
+    if (is_ctrl_down() && is_r(row, col, value))
+    {
+      debug_msg(10,10, "SOFT RESET");
+      vsync_suspend_speed_eval();
+      machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
+    }
 }
 
 static int keyboard_set_latch_keyarr(int row, int col, int value)
@@ -153,15 +190,7 @@ static int keyboard_set_latch_keyarr(int row, int col, int value)
         latch_rev_keyarr[col] &= ~(1 << row);
     }
 
-    // extra payload to catch some shortcut keys
-
-    // CTRL+left-arrow = swap joystick ports
-    if (is_ctrl_down() && is_left_arrow(row, col, value))
-    {
-      // do the joystick swap here
-      printf("do joystick swap here!!\n");
-      swap_joyports();
-    }
+    assess_pcu_shortcut_keys(row, col, value);
 
     return 0;
 }
