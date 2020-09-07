@@ -163,7 +163,7 @@ void vsync_suspend_speed_eval(void);
 int trigger_counter = 0;
 int trigger_hard_reset = 0;
 int trigger_soft_reset = 0;
-#define MAX_COUNTER 10000
+#define MAX_COUNTER 100000
 
 static void assess_pcu_shortcut_keys(int row, int col, int value)
 {
@@ -183,7 +183,7 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     // CTRL+R = soft-reset
     if (is_ctrl_down() && is_r(row, col, value))
     {
-      debug_msg(10,10, "SOFT RESET");
+      debug_msg_centred("SOFT RESET");
       vsync_suspend_speed_eval();
       trigger_soft_reset = 1;
       trigger_counter = MAX_COUNTER;
@@ -192,7 +192,7 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     // CTRL+H = hard-reset
     if (is_ctrl_down() && is_h(row, col, value))
     {
-      debug_msg(10,10, "HARD RESET");
+      debug_msg_centred("HARD RESET");
       vsync_suspend_speed_eval();
       trigger_hard_reset = 1;
       trigger_counter = MAX_COUNTER;
