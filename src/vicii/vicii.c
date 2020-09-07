@@ -510,6 +510,10 @@ void debug_msg(int x, int y, char* str)
   // force refresh
   vsyncarch_presync(); // does a notify FRAME_DONE
 
+  // force redraw of screen contents (to remove debug message afterwards)
+  vicii.raster.dont_cache = 1;
+  vicii.raster.num_cached_lines = 0;
+
   // wait 1 second
   usleep(1000000);
 }
