@@ -138,8 +138,10 @@ static int is_h(int row, int col, int value)
 
 
 void debug_msg(int x, int y, char* str);
+void debug_msg_centred(char* str);
 extern BYTE mem_ram[];
 extern int swapping;
+
 static int swap_joyports(void)
 {
   // swap joystick ports
@@ -149,7 +151,7 @@ static int swap_joyports(void)
   // like 'JoyDevice*', so I tried this alternate method of
   // swapping the joystick.
 
-  debug_msg(10,10, "JOYSTICK SWAP");
+  debug_msg_centred("JOYSTICK SWAP");
 
   if (swapping == 0) swapping = 1;
   else if (swapping == 1) swapping = 0;
@@ -157,6 +159,11 @@ static int swap_joyports(void)
 
 void cartridge_trigger_freeze(void);
 void vsync_suspend_speed_eval(void);
+
+int trigger_counter = 0;
+int trigger_hard_reset = 0;
+int trigger_soft_reset = 0;
+#define MAX_COUNTER 10000
 
 static void assess_pcu_shortcut_keys(int row, int col, int value)
 {
@@ -169,7 +176,7 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     // CTRL+F = freeze button
     if (is_ctrl_down() && is_f(row, col, value))
     {
-      debug_msg(10,10, "FREEZE BUTTON PRESSED");
+      debug_msg_centred("FREEZE BUTTON PRESSED");
       cartridge_trigger_freeze();
     }
 
@@ -178,7 +185,8 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     {
       debug_msg(10,10, "SOFT RESET");
       vsync_suspend_speed_eval();
-      machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
+      trigger_soft_reset = 1;
+      trigger_counter = MAX_COUNTER;
     }
 
     // CTRL+H = hard-reset
@@ -186,7 +194,8 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     {
       debug_msg(10,10, "HARD RESET");
       vsync_suspend_speed_eval();
-      machine_trigger_reset(MACHINE_RESET_MODE_HARD);
+      trigger_hard_reset = 1;
+      trigger_counter = MAX_COUNTER;
     }
 }
 

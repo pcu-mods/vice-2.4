@@ -442,6 +442,11 @@ BYTE debug_charmem[40*25] = { 0 };
 
 //void show_str(char* str);
 
+void clear_debug(void)
+{
+  memset(debug_charmem, 0, 40*25);
+}
+
 void draw_debug(void)
 {
   static int z = 0;
@@ -492,6 +497,9 @@ void debug_msg(int x, int y, char* str)
 {
 
   int i;
+
+  clear_debug();
+
   for (i = 0; i < strlen(str); i++)
   {
     debug_charmem[x+y*40+i] = str[i];
@@ -505,6 +513,16 @@ void debug_msg(int x, int y, char* str)
   // wait 1 second
   usleep(1000000);
 }
+
+void debug_msg_centred(char* str)
+{
+  int x = (40 - strlen(str)) / 2;
+  int y = 10;
+
+  debug_msg(x, y, str);
+}
+
+
 
 /* Reset the VIC-II chip.  */
 void vicii_reset(void)
