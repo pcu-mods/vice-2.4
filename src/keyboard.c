@@ -121,9 +121,27 @@ static int is_left_arrow(int row, int col, int value)
   return (row==7 && col==1 && value!=0);
 }
 
+static int is_f(int row, int col, int value)
+{
+  return (row==2 && col==5 && value!=0);
+}
+
+static int is_r(int row, int col, int value)
+{
+  return (row==2 && col==1 && value!=0);
+}
+
+static int is_h(int row, int col, int value)
+{
+  return (row==3 && col==5 && value!=0);
+}
+
+
 void debug_msg(int x, int y, char* str);
+void debug_msg_centred(char* str);
 extern BYTE mem_ram[];
 extern int swapping;
+
 static int swap_joyports(void)
 {
   // swap joystick ports
@@ -133,11 +151,52 @@ static int swap_joyports(void)
   // like 'JoyDevice*', so I tried this alternate method of
   // swapping the joystick.
 
-  debug_msg(10,10, "JOYSTICK SWAP");
+  debug_msg_centred("JOYSTICK SWAP");
 
   if (swapping == 0) swapping = 1;
   else if (swapping == 1) swapping = 0;
-  // mem_ram[0x400+40]++;
+}
+
+void cartridge_trigger_freeze(void);
+void vsync_suspend_speed_eval(void);
+
+int trigger_counter = 0;
+int trigger_hard_reset = 0;
+int trigger_soft_reset = 0;
+#define MAX_COUNTER 100000
+
+static void assess_pcu_shortcut_keys(int row, int col, int value)
+{
+    // CTRL+left-arrow = swap joystick ports
+    if (is_ctrl_down() && is_left_arrow(row, col, value))
+    {
+      swap_joyports();
+    }
+
+    // CTRL+F = freeze button
+    if (is_ctrl_down() && is_f(row, col, value))
+    {
+      debug_msg_centred("FREEZE BUTTON PRESSED");
+      cartridge_trigger_freeze();
+    }
+
+    // CTRL+R = soft-reset
+    if (is_ctrl_down() && is_r(row, col, value))
+    {
+      debug_msg_centred("SOFT RESET");
+      vsync_suspend_speed_eval();
+      trigger_soft_reset = 1;
+      trigger_counter = MAX_COUNTER;
+    }
+
+    // CTRL+H = hard-reset
+    if (is_ctrl_down() && is_h(row, col, value))
+    {
+      debug_msg_centred("HARD RESET");
+      vsync_suspend_speed_eval();
+      trigger_hard_reset = 1;
+      trigger_counter = MAX_COUNTER;
+    }
 }
 
 static int keyboard_set_latch_keyarr(int row, int col, int value)
@@ -153,15 +212,7 @@ static int keyboard_set_latch_keyarr(int row, int col, int value)
         latch_rev_keyarr[col] &= ~(1 << row);
     }
 
-    // extra payload to catch some shortcut keys
-
-    // CTRL+left-arrow = swap joystick ports
-    if (is_ctrl_down() && is_left_arrow(row, col, value))
-    {
-      // do the joystick swap here
-      printf("do joystick swap here!!\n");
-      swap_joyports();
-    }
+    assess_pcu_shortcut_keys(row, col, value);
 
     return 0;
 }

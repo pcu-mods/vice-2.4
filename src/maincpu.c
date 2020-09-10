@@ -411,6 +411,10 @@ void maincpu_resync_limits(void) {
     }
 }
 
+extern int trigger_soft_reset;
+extern int trigger_hard_reset;
+extern int trigger_counter;
+
 void maincpu_mainloop(void)
 {
 #ifndef C64DTV
@@ -520,6 +524,21 @@ void maincpu_mainloop(void)
         if (CLK > 246171754)
             debug.maincpu_traceflg = 1;
 #endif
+    if (trigger_soft_reset && trigger_counter == 0)
+    {
+      machine_trigger_reset(MACHINE_RESET_MODE_SOFT);
+      trigger_soft_reset = 0;
+    }
+    if (trigger_hard_reset && trigger_counter == 0)
+    {
+      machine_trigger_reset(MACHINE_RESET_MODE_HARD);
+      trigger_hard_reset = 0;
+    }
+    if (trigger_counter > 0)
+    {
+      trigger_counter--;
+    }
+
     }
 }
 
