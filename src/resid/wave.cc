@@ -87,6 +87,8 @@ WaveformGenerator::WaveformGenerator()
     // MOS 8580: 2R/R ~ 2.00, correct termination.
     build_dac_table(model_dac[1], 12, 2.00, true);
 
+    freq_scale = 1.0;
+
     class_init = true;
   }
 
@@ -102,6 +104,13 @@ WaveformGenerator::WaveformGenerator()
   reset();
 }
 
+// ----------------------------------------------------------------------------
+// Set audio frequency scale adjustment
+// ----------------------------------------------------------------------------
+void WaveformGenerator::set_audio_frequency_scale(float sf)
+{
+  freq_scale = sf;
+}
 
 // ----------------------------------------------------------------------------
 // Set sync source.
