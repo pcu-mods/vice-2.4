@@ -173,6 +173,13 @@ static model_filter_init_t model_filter_init[2] = {
 unsigned short Filter::vcr_kVg[1 << 16];
 unsigned short Filter::vcr_n_Ids_term[1 << 16];
 
+#ifndef HAS_LOG1P
+static double log1p(double x)
+{
+    return log(1 + x) - (((1 + x) - 1) - x) / (1 + x);
+}
+#endif
+
 Filter::model_filter_t Filter::model_filter[2];
 
 
@@ -398,14 +405,12 @@ Filter::Filter()
     // kVg_Vx = k*Vg - Vx
     // I.e. if k != 1.0, Vg must be scaled accordingly.
     for (int kVg_Vx = 0; kVg_Vx < (1 << 16); kVg_Vx++) {
-      double log_term = log(1 + exp((kVg_Vx/N16 - kVt)/(2*Ut)));
+      double log_term = log1p(exp((kVg_Vx/N16 - kVt)/(2*Ut)));
       // Scaled by m*2^15
       vcr_n_Ids_term[kVg_Vx] = (unsigned short)(n_Is*log_term*log_term);
     }
 
     class_init = true;
-
-    fc_scale = 1.0;
   }
 
   enable_filter(true);
@@ -522,11 +527,8 @@ void Filter::writeMODE_VOL(reg8 mode_vol)
 // Set filter cutoff frequency.
 void Filter::set_w0()
 {
-  int fcs = (int)fc * fc_scale;
-  //if(fcs > 0xfff) fcs = 0xfff; // Clamp to 12 bits
-
   model_filter_t& f = model_filter[sid_model];
-  int Vw = Vw_bias + f.f0_dac[fcs];
+  int Vw = Vw_bias + f.f0_dac[fc];
   Vddt_Vw_2 = unsigned(f.kVddt - Vw)*unsigned(f.kVddt - Vw) >> 1;
 
   // FIXME: w0 is temporarily used for MOS 8580 emulation.
@@ -534,7 +536,7 @@ void Filter::set_w0()
   // Multiply with 1.048576 to facilitate division by 1 000 000 by right-
   // shifting 20 times (2 ^ 20 = 1048576).
   // 1.048576*2*pi*12500 = 82355
-  w0 = 82355*(fcs + 1) >> 11;
+  w0 = 82355*(fc + 1) >> 11;
 }
 
 /*
@@ -666,11 +668,6 @@ void Filter::set_sum_mix()
   mix =
     (enabled ? (mode & 0x70) | ((~(filt | (mode & 0x80) >> 5)) & 0x0f) : 0x0f)
     & voice_mask;
-}
-
-void Filter::set_audio_frequency_scale( float sf )
-{
-  fc_scale = sf;
 }
 
 } // namespace reSID

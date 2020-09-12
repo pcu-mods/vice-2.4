@@ -352,7 +352,6 @@ public:
   void adjust_filter_bias(double dac_bias);
   void set_chip_model(chip_model model);
   void set_voice_mask(reg4 mask);
-  void set_audio_frequency_scale(float);
 
   void clock(int voice1, int voice2, int voice3);
   void clock(cycle_count delta_t, int voice1, int voice2, int voice3);
@@ -401,9 +400,6 @@ protected:
   // These are derived from filt, mode, and voice_mask.
   reg8 sum;
   reg8 mix;
-
-  // Cutoff frequency scale factor
-  float fc_scale; 
 
   // State of filter.
   int Vhp; // highpass
@@ -1280,8 +1276,12 @@ for my $mix (0..2**@i-1) {
   }
   else {
     // FIXME: Temporary code for MOS 8580, should use code above.
-    return Vi*vol >> 4;
-  }
+    /* do hard clipping here, else some tunes manage to overflow this
+       (eg /MUSICIANS/L/Linus/64_Forever.sid, starting at 0:44) */
+    int tmp = Vi*(int)vol >> 4;
+    if (tmp < -32768) tmp = -32768;
+    if (tmp > 32767) tmp = 32767;
+    return (short)tmp;  }
 }
 
 

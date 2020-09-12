@@ -46,13 +46,12 @@ public:
 			       double sample_freq, double pass_freq = -1,
 			       double filter_scale = 0.97);
   void adjust_sampling_frequency(double sample_freq);
-  void set_audio_frequency_scale(float);
 
   void clock();
   void clock(cycle_count delta_t);
   int clock(cycle_count& delta_t, short* buf, int n, int interleave = 1);
   void reset();
-  
+
   // Read/write registers.
   reg8 read(reg8 offset);
   void write(reg8 offset, reg8 value);
@@ -87,7 +86,7 @@ public:
     bool hold_zero[3];
     cycle_count envelope_pipeline[3];
   };
-    
+
   State read_state();
   void write_state(const State& state);
 
@@ -116,6 +115,9 @@ public:
 
   reg8 bus_value;
   cycle_count bus_value_ttl;
+
+  // The data bus TTL for the selected chip model
+  cycle_count databus_ttl;
 
   // Pipeline for writes on the MOS8580.
   cycle_count write_pipeline;
@@ -152,6 +154,9 @@ public:
   short sample_prev, sample_now;
   int fir_N;
   int fir_RES;
+  double fir_beta;
+  double fir_f_cycles_per_sample;
+  double fir_filter_scale;
 
   // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
   short* sample;
