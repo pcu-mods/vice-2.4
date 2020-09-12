@@ -58,6 +58,7 @@
 #include "types.h"
 #include "util.h"
 #include "vice-event.h"
+#include "sid/sid.h"
 
 
 /* #define KEYBOARD_RAND() (rand() % machine_get_cycles_per_frame()) */
@@ -136,6 +137,10 @@ static int is_h(int row, int col, int value)
   return (row==3 && col==5 && value!=0);
 }
 
+static int is_s(int row, int col, int value)
+{
+    return (row==1 && col==5 && value!=0);
+}
 
 void debug_msg(int x, int y, char* str);
 void debug_msg_centred(char* str);
@@ -164,6 +169,36 @@ int trigger_counter = 0;
 int trigger_hard_reset = 0;
 int trigger_soft_reset = 0;
 #define MAX_COUNTER 100000
+
+static int sid_choice = 0;
+#define MAX_SID_CHOICE 2
+static char sid_choices[MAX_SID_CHOICE][20] =
+{
+  "6581 (RESID)",
+  "8580 (RESID)",
+};
+
+void sid_chip_selector(void)
+{
+  sid_choice = (sid_choice + 1) % MAX_SID_CHOICE;
+  vsync_suspend_speed_eval();
+  debug_msg_centred(sid_choices[sid_choice]);
+
+  switch(sid_choice)
+  {
+    case 0:
+      resources_set_int("SidEngine", SID_ENGINE_RESID );
+      resources_set_int("SidModel" , SID_MODEL_6581 );
+      break;
+    case 1:
+      resources_set_int("SidEngine", SID_ENGINE_RESID );
+      resources_set_int("SidModel" , SID_MODEL_8580 );
+      break;
+  }
+
+  sound_close();
+  sound_open();
+}
 
 static void assess_pcu_shortcut_keys(int row, int col, int value)
 {
@@ -196,6 +231,12 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
       vsync_suspend_speed_eval();
       trigger_hard_reset = 1;
       trigger_counter = MAX_COUNTER;
+    }
+
+    // CTRL+S = sid-chip selector
+    if (is_ctrl_down() && is_s(row, col, value))
+    {
+      sid_chip_selector();
     }
 }
 
