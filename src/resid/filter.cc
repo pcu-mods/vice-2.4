@@ -527,9 +527,10 @@ void Filter::writeMODE_VOL(reg8 mode_vol)
 }
 
 // Set filter cutoff frequency.
+extern "C" int audio_scale_flag;
 void Filter::set_w0()
 {
-  int fcs = (int)fc * fc_scale;
+  int fcs = (int)fc * audio_scale_flag ? fc_scale : 1.0;
   //if(fcs > 0xfff) fcs = 0xfff; // Clamp to 12 bits
 
   model_filter_t& f = model_filter[sid_model];

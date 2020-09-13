@@ -33,6 +33,7 @@ namespace reSID
 // The noise waveform is taken from intermediate bits of a 23 bit shift
 // register. This register is clocked by bit 19 of the accumulator.
 // ----------------------------------------------------------------------------
+extern "C" int audio_scale_flag;
 class WaveformGenerator
 {
 public:
@@ -155,7 +156,7 @@ void WaveformGenerator::clock()
   }
   else {
     // Calculate new accumulator value;
-    reg24 accumulator_next = (accumulator + (reg24)(freq*freq_scale)) & 0xffffff;
+    reg24 accumulator_next = (accumulator + (reg24)(freq*(audio_scale_flag ? freq_scale : 1.0))) & 0xffffff;
     reg24 accumulator_bits_set = ~accumulator & accumulator_next;
     accumulator = accumulator_next;
 
@@ -194,7 +195,7 @@ void WaveformGenerator::clock(cycle_count delta_t)
   }
   else {
     // Calculate new accumulator value;
-    reg24 delta_accumulator = (reg24)((delta_t*freq)*freq_scale);
+    reg24 delta_accumulator = (reg24)((delta_t*freq)*(audio_scale_flag ? freq_scale : 1.0));
     reg24 accumulator_next = (accumulator + delta_accumulator) & 0xffffff;
     reg24 accumulator_bits_set = ~accumulator & accumulator_next;
     accumulator = accumulator_next;
