@@ -530,7 +530,7 @@ void Filter::writeMODE_VOL(reg8 mode_vol)
 extern "C" int audio_scale_flag;
 void Filter::set_w0()
 {
-  int fcs = (int)fc * audio_scale_flag ? fc_scale : 1.0;
+  int fcs = (int)fc;
   //if(fcs > 0xfff) fcs = 0xfff; // Clamp to 12 bits
 
   model_filter_t& f = model_filter[sid_model];

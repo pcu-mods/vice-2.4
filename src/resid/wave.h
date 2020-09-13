@@ -156,7 +156,7 @@ void WaveformGenerator::clock()
   }
   else {
     // Calculate new accumulator value;
-    reg24 accumulator_next = (accumulator + (reg24)(freq*(audio_scale_flag ? freq_scale : 1.0))) & 0xffffff;
+    reg24 accumulator_next = (accumulator + freq) & 0xffffff;
     reg24 accumulator_bits_set = ~accumulator & accumulator_next;
     accumulator = accumulator_next;
 
@@ -195,7 +195,7 @@ void WaveformGenerator::clock(cycle_count delta_t)
   }
   else {
     // Calculate new accumulator value;
-    reg24 delta_accumulator = (reg24)((delta_t*freq)*(audio_scale_flag ? freq_scale : 1.0));
+    reg24 delta_accumulator = (reg24)((delta_t*freq));
     reg24 accumulator_next = (accumulator + delta_accumulator) & 0xffffff;
     reg24 accumulator_bits_set = ~accumulator & accumulator_next;
     accumulator = accumulator_next;

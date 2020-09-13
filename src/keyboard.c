@@ -142,11 +142,6 @@ static int is_s(int row, int col, int value)
     return (row==1 && col==5 && value!=0);
 }
 
-static int is_a(int row, int col, int value)
-{
-    return (row==1 && col==2 && value!=0);
-}
-
 void debug_msg(int x, int y, char* str);
 void debug_msg_centred(char* str);
 extern BYTE mem_ram[];
@@ -205,20 +200,6 @@ void sid_chip_selector(void)
   sound_open();
 }
 
-static char audio_scaling_msgs[MAX_SID_CHOICE][20] =
-{
-  "AUDIO SCALING OFF",
-  "AUDIO SCALING ON",
-};
-
-int audio_scale_flag = 1;  // defaults to on
-void audio_scale_toggle(void)
-{
-  audio_scale_flag = (audio_scale_flag + 1) % 2;
-  vsync_suspend_speed_eval();
-  debug_msg_centred(audio_scaling_msgs[audio_scale_flag]);
-}
-
 static void assess_pcu_shortcut_keys(int row, int col, int value)
 {
     // CTRL+left-arrow = swap joystick ports
@@ -256,12 +237,6 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     if (is_ctrl_down() && is_s(row, col, value))
     {
       sid_chip_selector();
-    }
-
-    // CTRL+A = audio-scaling toggle (defaults to on)
-    if (is_ctrl_down() && is_a(row, col, value))
-    {
-      audio_scale_toggle();
     }
 }
 
