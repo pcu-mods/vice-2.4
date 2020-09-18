@@ -1475,6 +1475,11 @@ DISTCLEANFILES = $(BUILT_SOURCES)
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
+.PHONY: pcuversion.h
+pcuversion.h:
+	echo "Generating 'pcuversion.h'..."
+	echo "#define PCU_VERSION \""`git rev-parse --abbrev-ref HEAD`"-"`git describe --always --abbrev=7 --dirty=+DIRTY`"\"" > pcuversion.h
+
 .SUFFIXES:
 .SUFFIXES: .c .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -1580,7 +1585,7 @@ vsid$(EXEEXT): $(vsid_OBJECTS) $(vsid_DEPENDENCIES) $(EXTRA_vsid_DEPENDENCIES)
 x128$(EXEEXT): $(x128_OBJECTS) $(x128_DEPENDENCIES) $(EXTRA_x128_DEPENDENCIES) 
 	@rm -f x128$(EXEEXT)
 	$(x128_LINK) $(x128_OBJECTS) $(x128_LDADD) $(LIBS)
-x64$(EXEEXT): $(x64_OBJECTS) $(x64_DEPENDENCIES) $(EXTRA_x64_DEPENDENCIES) 
+x64$(EXEEXT): pcuversion.h $(x64_OBJECTS) $(x64_DEPENDENCIES) $(EXTRA_x64_DEPENDENCIES) 
 	@rm -f x64$(EXEEXT)
 	$(x64_LINK) $(x64_OBJECTS) $(x64_LDADD) $(LIBS)
 x64dtv$(EXEEXT): $(x64dtv_OBJECTS) $(x64dtv_DEPENDENCIES) $(EXTRA_x64dtv_DEPENDENCIES) 

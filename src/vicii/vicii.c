@@ -497,14 +497,22 @@ void debug_msg(int x, int y, char* str)
 {
 
   int i;
-
-  clear_debug();
+  char c;
 
   for (i = 0; i < strlen(str); i++)
   {
-    debug_charmem[x+y*40+i] = str[i];
-  }
+    c = str[i];
+    
+    // shift lower-case ascii characters to equivalent petscii screen code value
+    if (c >= 'a' && c <= 'z')
+      c -= 0x60;
 
+    debug_charmem[x+y*40+i] = c;
+  }
+}
+
+void debug_display(void)
+{
   draw_debug();
 
   // force refresh
@@ -518,14 +526,57 @@ void debug_msg(int x, int y, char* str)
   usleep(1000000);
 }
 
-void debug_msg_centred(char* str)
+void debug_msg_centred(int y, char* str)
 {
   int x = (40 - strlen(str)) / 2;
-  int y = 10;
 
   debug_msg(x, y, str);
 }
 
+#define ONESHOT_YPOS  10
+void debug_oneshot(char* str)
+{
+  clear_debug();
+  debug_msg_centred(ONESHOT_YPOS, str);
+  debug_display();
+}
+
+void debug_draw_box(int x, int y, int w, int h)
+{
+  int xi, yi;
+
+  // fill background
+  for (yi = y; yi < (y+h); yi++)
+  {
+    for (xi = x; xi < (x+w); xi++)
+    {
+      debug_charmem[xi+yi*40] = 0x20; // space character
+    }
+  }
+
+  // draw horizontals
+  for (xi = x; xi < (x+w); xi++)
+  {
+    debug_charmem[xi+y*40] = 64; // horizontal line char
+    debug_charmem[xi+(y+h-1)*40] = 64; // horizontal line char
+  }
+
+  for (yi = y; yi < (y+h); yi++)
+  {
+    debug_charmem[x+yi*40] = 93; // vertical line char
+    debug_charmem[x+w-1+yi*40] = 93; // vertical line char
+  }
+
+  // draw corners
+  // 112 = top-left corner
+  debug_charmem[x+y*40] = 112;
+  // 110 = top-right corner
+  debug_charmem[x+w-1+y*40] = 110;
+  // 109 = bottom-left corner
+  debug_charmem[x+(y+h-1)*40] = 109;
+  // 125 = bottom-right corner
+  debug_charmem[x+w-1+(y+h-1)*40] = 125;
+}
 
 
 /* Reset the VIC-II chip.  */
