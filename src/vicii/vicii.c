@@ -521,9 +521,6 @@ void debug_display(void)
   // force redraw of screen contents (to remove debug message afterwards)
   vicii.raster.dont_cache = 1;
   vicii.raster.num_cached_lines = 0;
-
-  // wait 1 second
-  usleep(1000000);
 }
 
 void debug_msg_centred(int y, char* str)
@@ -539,6 +536,9 @@ void debug_oneshot(char* str)
   clear_debug();
   debug_msg_centred(ONESHOT_YPOS, str);
   debug_display();
+
+  // wait 1 second
+  usleep(1000000);
 }
 
 void debug_draw_box(int x, int y, int w, int h)
