@@ -235,6 +235,31 @@ void debug_pause(int flag)
   }
 }
 
+int debug_paused = 0;
+
+////static void debug_pause_trap(WORD addr, void *data)
+////{
+////    vsync_suspend_speed_eval();
+////    while (debug_paused) {
+////        //ui_dispatch_events();
+////        //SDL_Delay(10);
+////        usleep(10000);
+////    }
+////}
+
+void debug_pause(int flag)
+{
+  if (flag)
+  {
+    debug_paused = flag;
+    // interrupt_maincpu_trigger_trap(debug_pause_trap, 0)
+  }
+  else
+  {
+    debug_paused = flag;
+  }
+}
+
 void show_help_menu(void)
 {
   clear_debug();
@@ -645,6 +670,11 @@ void keyboard_key_pressed(signed long key)
       debug_pause(0);
     }
 
+    if (debug_paused)
+    {
+      return;
+    }
+
     if (event_playback_active()) {
         return;
     }
@@ -783,6 +813,13 @@ static int keyboard_key_released_matrix(int row, int column, int shift)
 void keyboard_key_released(signed long key)
 {
     int i, latch;
+
+  if (debug_paused)
+  {
+      if (key == 27) // escape key (run/stop)
+        debug_pause(0);
+      return;
+  }
 
     if (event_playback_active()) {
         return;
