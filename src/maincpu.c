@@ -517,7 +517,18 @@ void maincpu_mainloop(void)
 
 #define GLOBAL_REGS maincpu_regs
 
+extern int debug_paused;
+
+if (!debug_paused)
+{
 #include "6510core.c"
+}
+else
+{
+  vsyncarch_presync();
+  ui_dispatch_events();
+  vsyncarch_postsync();
+}
 
         maincpu_int_status->num_dma_per_opcode = 0;
 #if 0

@@ -142,9 +142,18 @@ static int is_s(int row, int col, int value)
     return (row==1 && col==5 && value!=0);
 }
 
-void debug_msg(int x, int y, char* str);
-void debug_msg_centred(char* str);
+static int is_fslash(int row, int col, int value)
+{
+    return (row==6 && col==7 && value!=0);
+}
+
 extern BYTE mem_ram[];
+void clear_debug(void);
+void debug_oneshot(char* str);
+void debug_draw_box(int x, int y, int w, int h);
+void debug_msg(int x, int y, char* str);
+void debug_msg_centred(int y, char* str);
+void debug_display(void);
 extern int swapping;
 
 static int swap_joyports(void)
@@ -156,7 +165,7 @@ static int swap_joyports(void)
   // like 'JoyDevice*', so I tried this alternate method of
   // swapping the joystick.
 
-  debug_msg_centred("JOYSTICK SWAP");
+  debug_oneshot("JOYSTICK SWAP");
 
   if (swapping == 0) swapping = 1;
   else if (swapping == 1) swapping = 0;
@@ -174,15 +183,15 @@ static int sid_choice = 0;
 #define MAX_SID_CHOICE 2
 static char sid_choices[MAX_SID_CHOICE][20] =
 {
-  "6581 (RESID)",
-  "8580 (RESID)",
+  "6581 (ReSID)",
+  "8580 (ReSID)",
 };
 
 void sid_chip_selector(void)
 {
   sid_choice = (sid_choice + 1) % MAX_SID_CHOICE;
   vsync_suspend_speed_eval();
-  debug_msg_centred(sid_choices[sid_choice]);
+  debug_oneshot(sid_choices[sid_choice]);
 
   switch(sid_choice)
   {
@@ -200,6 +209,43 @@ void sid_chip_selector(void)
   sound_open();
 }
 
+#include "pcuversion.h"
+
+int debug_paused = 0;
+
+void debug_pause(int flag)
+{
+  if (flag)
+  {
+    debug_paused = flag;
+  }
+  else
+  {
+    debug_paused = flag;
+  }
+}
+
+void show_help_menu(void)
+{
+  clear_debug();
+  debug_draw_box(3, 5, 32, 15);
+  debug_msg_centred(6, "C64EMU-PCU.RGL");
+  debug_msg_centred(7, "--------------");
+  debug_msg(4,8,"CTRL-\x1f = Joy swap");
+  debug_msg(4,9,"CTRL-F = Freeze button");
+  debug_msg(4,10,"CTRL-R = Soft reset");
+  debug_msg(4,11,"CTRL-H = Hard reset");
+  debug_msg(4,12,"CTRL-S = SID swap (6581/8580)");
+  debug_msg(4,13,"CTRL-/ = Help menu");
+  debug_msg(4,16, "VER#: " PCU_VERSION);
+  debug_msg_centred(18, "Press RUN/STOP to exit");
+  vsync_suspend_speed_eval();
+  debug_display();
+
+  debug_pause(1);
+}
+
+
 static void assess_pcu_shortcut_keys(int row, int col, int value)
 {
     // CTRL+left-arrow = swap joystick ports
@@ -211,14 +257,14 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     // CTRL+F = freeze button
     if (is_ctrl_down() && is_f(row, col, value))
     {
-      debug_msg_centred("FREEZE BUTTON PRESSED");
+      debug_oneshot("FREEZE BUTTON PRESSED");
       cartridge_trigger_freeze();
     }
 
     // CTRL+R = soft-reset
     if (is_ctrl_down() && is_r(row, col, value))
     {
-      debug_msg_centred("SOFT RESET");
+      debug_oneshot("SOFT RESET");
       vsync_suspend_speed_eval();
       trigger_soft_reset = 1;
       trigger_counter = MAX_COUNTER;
@@ -227,7 +273,7 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     // CTRL+H = hard-reset
     if (is_ctrl_down() && is_h(row, col, value))
     {
-      debug_msg_centred("HARD RESET");
+      debug_oneshot("HARD RESET");
       vsync_suspend_speed_eval();
       trigger_hard_reset = 1;
       trigger_counter = MAX_COUNTER;
@@ -237,6 +283,12 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     if (is_ctrl_down() && is_s(row, col, value))
     {
       sid_chip_selector();
+    }
+
+    // CTRL+/ = show help menu
+    if (is_ctrl_down() && is_fslash(row, col, value))
+    {
+      show_help_menu();
     }
 }
 
@@ -578,6 +630,11 @@ void keyboard_key_pressed(signed long key)
 {
     int i, latch;
 
+    if (debug_paused)
+    {
+      return;
+    }
+
     if (event_playback_active()) {
         return;
     }
@@ -716,6 +773,17 @@ static int keyboard_key_released_matrix(int row, int column, int shift)
 void keyboard_key_released(signed long key)
 {
     int i, latch;
+
+  if (debug_paused)
+  {
+      if (key == 1) // escape key (run/stop)
+      {
+        debug_pause(0);
+        keyboard_clear_keymatrix();
+      }
+
+      return;
+  }
 
     if (event_playback_active()) {
         return;
