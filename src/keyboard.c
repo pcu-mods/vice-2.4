@@ -152,6 +152,11 @@ static int is_w(int row, int col, int value)
     return (row==1 && col==1 && value!=0);
 }
 
+static int is_u(int row, int col, int value)
+{
+    return (row==3 && col==6 && value!=0);
+}
+
 extern BYTE mem_ram[];
 void clear_debug(void);
 void debug_oneshot(char* str);
@@ -281,18 +286,21 @@ void debug_pause(void)
 void show_help_menu(void)
 {
   clear_debug();
-  debug_draw_box(3, 5, 32, 15);
+  debug_draw_box(1, 5, 34, 16);
   debug_msg_centred(6, "C64EMU-PCU.RGL");
   debug_msg_centred(7, "--------------");
-  debug_msg(4,8,"CTRL-\x1f = Joy swap");
-  debug_msg(4,9,"CTRL-F = Freeze button");
-  debug_msg(4,10,"CTRL-R = Soft reset");
-  debug_msg(4,11,"CTRL-H = Hard reset");
-  debug_msg(4,12,"CTRL-S = SID swap (6581/8580)");
-  debug_msg(4,13,"CTRL-W = Toggle Warp mode");
-  debug_msg(4,14,"CTRL-/ = Help menu");
-  debug_msg(4,16, "VER#: " PCU_VERSION);
-  debug_msg_centred(18, "Press RUN/STOP to exit");
+  debug_msg(2,8,"CTRL-\x1f = Joy swap");
+  debug_msg(2,9,"CTRL-F = Freeze button");
+  debug_msg(2,10,"CTRL-R = Soft reset");
+  debug_msg(2,11,"CTRL-H = Hard reset");
+  debug_msg(2,12,"CTRL-S = SID swap (6581/8580)");
+  debug_msg(2,13,"CTRL-W = Toggle Warp mode");
+  debug_msg(2,14,"CTRL-U = Toggle UserPort joysticks");
+  debug_msg(2,15,"CTRL-/ = Help menu");
+
+  debug_msg(2,17, "VER#: " PCU_VERSION);
+
+  debug_msg_centred(19, "Press RUN/STOP to exit");
   vsync_suspend_speed_eval();
   debug_display();
 
@@ -316,6 +324,24 @@ static void toggle_warpmode(void)
 
   resources_set_int("WarpMode", warptoggle);
   sound_set_warp_mode(warptoggle);
+}
+
+static int userportjoytoggle=0;
+static void toggle_userport_joysticks(void)
+{
+  if (userportjoytoggle == 0)
+  {
+    userportjoytoggle = 1;
+    debug_oneshot("UserPort Joysticks ON");
+  }
+  else
+  {
+    userportjoytoggle = 0;
+    debug_oneshot("UserPort Joysticks OFF");
+  }
+
+  resources_set_int("ExtraJoy", userportjoytoggle);
+  resources_set_int("ExtraJoyType", 0);
 }
 
 static void assess_pcu_shortcut_keys(int row, int col, int value)
@@ -367,6 +393,12 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     if (is_ctrl_down() && is_w(row, col, value))
     {
       toggle_warpmode();
+    }
+
+    // CTRL+U = toggle user-port joysticks
+    if (is_ctrl_down() && is_u(row, col, value))
+    {
+      toggle_userport_joysticks();
     }
 }
 
