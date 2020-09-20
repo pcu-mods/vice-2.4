@@ -630,11 +630,6 @@ void keyboard_key_pressed(signed long key)
 {
     int i, latch;
 
-    if (debug_paused)
-    {
-      return;
-    }
-
     if (event_playback_active()) {
         return;
     }
@@ -773,17 +768,6 @@ static int keyboard_key_released_matrix(int row, int column, int shift)
 void keyboard_key_released(signed long key)
 {
     int i, latch;
-
-  if (debug_paused)
-  {
-      if (key == 1) // escape key (run/stop)
-      {
-        debug_pause(0);
-        keyboard_clear_keymatrix();
-      }
-
-      return;
-  }
 
     if (event_playback_active()) {
         return;
