@@ -1979,6 +1979,8 @@ static const BYTE rewind_fetch_tab[] = {
         }
     }
 
+if (!debug_paused)
+{
     {
         opcode_t opcode;
 #ifdef DEBUG
@@ -3028,5 +3030,6 @@ trap_skipped:
             break;
         }
     }
+} // endif debug_paused
 }
 

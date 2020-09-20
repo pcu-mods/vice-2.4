@@ -414,6 +414,9 @@ void maincpu_resync_limits(void) {
 extern int trigger_soft_reset;
 extern int trigger_hard_reset;
 extern int trigger_counter;
+extern int vsync_do_vsync(struct video_canvas_s *c, int been_skipped);
+
+int dbg_ctr = 0;
 
 void maincpu_mainloop(void)
 {
@@ -519,15 +522,24 @@ void maincpu_mainloop(void)
 
 extern int debug_paused;
 
-if (!debug_paused)
-{
+//if (!debug_paused)
+//{
 #include "6510core.c"
-}
-else
+//}
+//else
+if (debug_paused)
 {
-  vsyncarch_presync();
-  ui_dispatch_events();
-  vsyncarch_postsync();
+  //dbg_ctr++;
+  //if (dbg_ctr > 2000000)
+  //{
+    //dbg_ctr = 0;
+    //vsync_do_vsync(NULL, 0);
+    vsyncarch_presync();
+    //ui_dispatch_events();
+    sound_flush();
+    vsyncarch_postsync();
+    usleep(30000);
+  //}
 }
 
         maincpu_int_status->num_dma_per_opcode = 0;
