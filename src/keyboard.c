@@ -147,6 +147,11 @@ static int is_fslash(int row, int col, int value)
     return (row==6 && col==7 && value!=0);
 }
 
+static int is_w(int row, int col, int value)
+{
+    return (row==1 && col==1 && value!=0);
+}
+
 extern BYTE mem_ram[];
 void clear_debug(void);
 void debug_oneshot(char* str);
@@ -284,7 +289,8 @@ void show_help_menu(void)
   debug_msg(4,10,"CTRL-R = Soft reset");
   debug_msg(4,11,"CTRL-H = Hard reset");
   debug_msg(4,12,"CTRL-S = SID swap (6581/8580)");
-  debug_msg(4,13,"CTRL-/ = Help menu");
+  debug_msg(4,13,"CTRL-W = Toggle Warp mode");
+  debug_msg(4,14,"CTRL-/ = Help menu");
   debug_msg(4,16, "VER#: " PCU_VERSION);
   debug_msg_centred(18, "Press RUN/STOP to exit");
   vsync_suspend_speed_eval();
@@ -293,6 +299,24 @@ void show_help_menu(void)
   debug_pause();
 }
 
+static int warptoggle=0;
+
+static void toggle_warpmode(void)
+{
+  if (warptoggle == 0)
+  {
+    warptoggle = 1;
+    debug_oneshot("WARP-MODE ON");
+  }
+  else
+  {
+    warptoggle = 0;
+    debug_oneshot("WARP-MODE OFF");
+  }
+
+  resources_set_int("WarpMode", warptoggle);
+  sound_set_warp_mode(warptoggle);
+}
 
 static void assess_pcu_shortcut_keys(int row, int col, int value)
 {
@@ -337,6 +361,12 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     if (is_ctrl_down() && is_fslash(row, col, value))
     {
       show_help_menu();
+    }
+
+    // CTRL+W = toggle warp mode
+    if (is_ctrl_down() && is_w(row, col, value))
+    {
+      toggle_warpmode();
     }
 }
 
