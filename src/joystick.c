@@ -217,10 +217,6 @@ static void joystick_process_latch(void)
 
 void joystick_set_value_absolute(unsigned int joyport, BYTE value)
 {
-  char str[256];
-  sprintf(str, "joysetvalabs(%d, %d)", joyport, value);
-  debug_oneshot(str);
-
   joyport = getjoyid(joyport);
     if (event_playback_active()) {
         return;

@@ -286,7 +286,7 @@ void debug_pause(void)
 void show_help_menu(void)
 {
   clear_debug();
-  debug_draw_box(1, 5, 34, 16);
+  debug_draw_box(1, 5, 36, 16);
   debug_msg_centred(6, "C64EMU-PCU.RGL");
   debug_msg_centred(7, "--------------");
   debug_msg(2,8,"CTRL-\x1f = Joy swap");
