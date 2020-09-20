@@ -530,6 +530,8 @@ void debug_msg_centred(int y, char* str)
   debug_msg(x, y, str);
 }
 
+
+extern void keyboard_clear_keymatrix(void);
 #define ONESHOT_YPOS  10
 void debug_oneshot(char* str)
 {
@@ -539,6 +541,7 @@ void debug_oneshot(char* str)
 
   // wait 1 second
   usleep(1000000);
+  keyboard_clear_keymatrix();
 }
 
 void debug_draw_box(int x, int y, int w, int h)

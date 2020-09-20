@@ -525,7 +525,9 @@ if (!debug_paused)
 }
 else
 {
+  vsyncarch_presync();
   ui_dispatch_events();
+  vsyncarch_postsync();
 }
 
         maincpu_int_status->num_dma_per_opcode = 0;

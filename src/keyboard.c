@@ -211,48 +211,13 @@ void sid_chip_selector(void)
 
 #include "pcuversion.h"
 
-static void pause_trap(WORD addr, void *data)
-{
-    vsync_suspend_speed_eval();
-    while (is_paused) {
-        //ui_dispatch_events();
-        //SDL_Delay(10);
-        usleep(10000);
-    }
-}
-
-static int is_paused = 0;
-void debug_pause(int flag)
-{
-  if (flag)
-  {
-    is_paused = flag;
-    interrupt_maincpu_trigger_trap(debug_pause_trap, 0)
-  }
-  else
-  {
-    is_paused = flag;
-  }
-}
-
 int debug_paused = 0;
-
-////static void debug_pause_trap(WORD addr, void *data)
-////{
-////    vsync_suspend_speed_eval();
-////    while (debug_paused) {
-////        //ui_dispatch_events();
-////        //SDL_Delay(10);
-////        usleep(10000);
-////    }
-////}
 
 void debug_pause(int flag)
 {
   if (flag)
   {
     debug_paused = flag;
-    // interrupt_maincpu_trigger_trap(debug_pause_trap, 0)
   }
   else
   {
@@ -665,11 +630,6 @@ void keyboard_key_pressed(signed long key)
 {
     int i, latch;
 
-    if (is_paused)
-    {
-      debug_pause(0);
-    }
-
     if (debug_paused)
     {
       return;
@@ -816,8 +776,12 @@ void keyboard_key_released(signed long key)
 
   if (debug_paused)
   {
-      if (key == 27) // escape key (run/stop)
+      if (key == 1) // escape key (run/stop)
+      {
         debug_pause(0);
+        keyboard_clear_keymatrix();
+      }
+
       return;
   }
 
