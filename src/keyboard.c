@@ -210,19 +210,67 @@ void sid_chip_selector(void)
 }
 
 #include "pcuversion.h"
+#include "linux/input.h"
+#include <fcntl.h>
 
-int debug_paused = 0;
+#define EV_PRESSED  1
+#define EV_RELEASED 0
+#define EV_REPEAT   2
 
-void debug_pause(int flag)
+static struct input_event event;
+static unsigned int scan_code = 0;
+int fd = 0;
+
+static void debug_read_keys(void)
 {
-  if (flag)
-  {
-    debug_paused = flag;
-  }
-  else
-  {
-    debug_paused = flag;
-  }
+  int num_bytes;
+  scan_code = 0;
+
+    num_bytes = read(fd, &event, sizeof(struct input_event));
+
+    if (event.type == EV_KEY)
+    {
+      if (event.value == EV_RELEASED)
+      {
+        scan_code = event.code;
+      }
+    }
+
+}
+
+static void debug_pause_trap(WORD addr, void *data)
+{
+  //char str[256];
+  char *device = "/dev/input/event1";
+
+  fd = open(device, O_RDWR);
+
+    vsync_suspend_speed_eval();
+
+    while (1) {
+      debug_read_keys();
+      //ui_dispatch_events();
+      //SDL_Delay(10);
+      usleep(10000);
+      if (scan_code == 1) // escape key pressed?
+        break;   // then exit our pause trap and let the emulator continue...
+
+// if (scan_code != 0)
+// {
+//   sprintf(str, "key=%d    ", scan_code);
+//   debug_msg(0, 0, str);
+//   debug_display();
+// }
+    }
+
+  close(fd);
+}
+
+
+// pause in order to display the help menu, and assess if run/stop key is pressed, to exit the menu
+void debug_pause(void)
+{
+  interrupt_maincpu_trigger_trap(debug_pause_trap, 0);
 }
 
 void show_help_menu(void)
@@ -242,7 +290,7 @@ void show_help_menu(void)
   vsync_suspend_speed_eval();
   debug_display();
 
-  debug_pause(1);
+  debug_pause();
 }
 
 
@@ -630,11 +678,6 @@ void keyboard_key_pressed(signed long key)
 {
     int i, latch;
 
-    if (debug_paused)
-    {
-      return;
-    }
-
     if (event_playback_active()) {
         return;
     }
@@ -773,17 +816,6 @@ static int keyboard_key_released_matrix(int row, int column, int shift)
 void keyboard_key_released(signed long key)
 {
     int i, latch;
-
-  if (debug_paused)
-  {
-      if (key == 1) // escape key (run/stop)
-      {
-        debug_pause(0);
-        keyboard_clear_keymatrix();
-      }
-
-      return;
-  }
 
     if (event_playback_active()) {
         return;
