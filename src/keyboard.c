@@ -253,7 +253,15 @@ static void debug_pause_trap(WORD addr, void *data)
   //char str[256];
   char *device = "/dev/input/event1";
 
-  fd = open(device, O_RDWR);
+  do
+  {
+    fd = open(device, O_RDONLY);
+    // sprintf(str, "fd=%d       ", fd);
+    // debug_msg_centred(0, str);
+    // debug_display();
+  }
+  while (fd < 0);
+
 
     vsync_suspend_speed_eval();
 
@@ -326,7 +334,7 @@ static void toggle_warpmode(void)
   sound_set_warp_mode(warptoggle);
 }
 
-static int userportjoytoggle=0;
+static int userportjoytoggle=1;
 static void toggle_userport_joysticks(void)
 {
   if (userportjoytoggle == 0)
