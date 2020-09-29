@@ -152,6 +152,11 @@ static int is_w(int row, int col, int value)
     return (row==1 && col==1 && value!=0);
 }
 
+static int is_b(int row, int col, int value)
+{
+    return (row==3 && col==4 && value!=0);
+}
+
 extern BYTE mem_ram[];
 void clear_debug(void);
 void debug_oneshot(char* str);
@@ -318,6 +323,100 @@ static void toggle_warpmode(void)
   sound_set_warp_mode(warptoggle);
 }
 
+// Technique borrowed from:
+// https://jineshkj.wordpress.com/2006/12/22/how-to-capture-stdin-stdout-and-stderr-of-child-program/
+
+/* since pipes are unidirectional, we need two pipes.
+   one for data to flow from parent's stdout to child's
+   stdin and the other for child's stdout to flow to
+   parent's stdin */
+
+#define NUM_PIPES          2
+
+#define PARENT_WRITE_PIPE  0
+#define PARENT_READ_PIPE   1
+
+int pipes[NUM_PIPES][2];
+
+/* always in a pipe[], pipe[0] is for read and
+   pipe[1] is for write */
+#define READ_FD  0
+#define WRITE_FD 1
+
+#define PARENT_READ_FD  ( pipes[PARENT_READ_PIPE][READ_FD]   )
+#define PARENT_WRITE_FD ( pipes[PARENT_WRITE_PIPE][WRITE_FD] )
+
+#define CHILD_READ_FD   ( pipes[PARENT_WRITE_PIPE][READ_FD]  )
+#define CHILD_WRITE_FD  ( pipes[PARENT_READ_PIPE][WRITE_FD]  )
+
+void show_bash_terminal(void)
+{
+    int outfd[2];
+    int infd[2];
+
+    // set_conio_terminal_mode();
+
+    // pipes for parent to write and read
+    pipe(pipes[PARENT_READ_PIPE]);
+    pipe(pipes[PARENT_WRITE_PIPE]);
+
+    // GI. Don't block on read
+    fcntl(pipes[PARENT_READ_PIPE][READ_FD], F_SETFL, O_NONBLOCK);
+
+    if(!fork()) {
+        char *argv[]={ "/usr/bin/bc", "-q", 0};
+
+        dup2(CHILD_READ_FD, STDIN_FILENO);
+        dup2(CHILD_WRITE_FD, STDOUT_FILENO);
+
+        /* Close fds not required by child. Also, we don't
+           want the exec'ed program to know these existed */
+        close(CHILD_READ_FD);
+        close(CHILD_WRITE_FD);
+        close(PARENT_READ_FD);
+        close(PARENT_WRITE_FD);
+
+        execv(argv[0], argv);
+    } else {
+        char buffer[100];
+        int count;
+
+        /* close fds not required by parent */
+        close(CHILD_READ_FD);
+        close(CHILD_WRITE_FD);
+
+        char str[256] = "1+1\n";
+        int pos = 0;
+
+        while(1)
+        {
+          // if (str[pos] != '\0')
+          if (kbhit())
+          {
+            int c = getch();
+            if (c == 13) { printf("\r\n"); c = 10; }
+            else { printf("%c", c); }
+            if (c == 3) break;  // use CTRL-C to kill this program?
+            str[0] = c;
+            // Write to child's stdin
+            write(PARENT_WRITE_FD, str, 1);
+            // pos++;
+            // TODO: draw onto debug screen and page-flip
+          }
+
+          // Read from child's stdout
+          count = read(PARENT_READ_FD, buffer, sizeof(buffer)-1);
+          if (count >= 0) {
+              buffer[count] = 0;
+              printf("%s", buffer);
+              // TODO: draw onto debug screen and page-flip
+          } else {
+              //printf("IO Error\n");
+          }
+        }
+    }
+}
+
 static void assess_pcu_shortcut_keys(int row, int col, int value)
 {
     // CTRL+left-arrow = swap joystick ports
@@ -367,6 +466,12 @@ static void assess_pcu_shortcut_keys(int row, int col, int value)
     if (is_ctrl_down() && is_w(row, col, value))
     {
       toggle_warpmode();
+    }
+
+    // CTRL+B = show bash terminal (c64-based)
+    if (is_ctrl_down() && is_b(row, col, value))
+    {
+      show_bash_terminal();
     }
 }
 
